@@ -2,28 +2,27 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 
-// Permet de charger les variables d'env depuis.env
+// Permet de charger les variables d'env depuis .env
 require("dotenv").config();
 
-// Connexion a la bdd
+// Connexion à la bdd (bases de données)
 const db = require("./db");
 
-// Importation des routes
-
-// ... à venir
+// === Importation des routes ===
+const articleRoutes = require("./article/routes/ArticleRouter");
 
 // Création de l'application Express
 const app = express();
 
-// Middleware
-// Parser le Json
+// MIDDLEWARES
+// Parser les JSON
 app.use(express.json());
 
-// Logger de requête http dans la console
+// Logger de requêtes HTTP dans la console
 app.use(morgan("dev"));
 
 // Permet les requêtes cross-origin (qui viennent du front)
-// CORS = cross-Origin ressource sharing
+// CORS = Cross-Origin Ressource Sharing
 // OBLIGATOIRE sinon le navigateur bloque les requêtes
 
 app.use(
@@ -33,9 +32,9 @@ app.use(
   }),
 );
 
-// Routes
+// ROUTES
 
-// Routes de test pour vérfier que l' api fonctionne
+// Route de test pour vérifier que l'api fonctionne
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
@@ -43,18 +42,18 @@ app.get("/health", (req, res) => {
   });
 });
 
-//Routes de l'API
-// ... à venir
+// Routes de l'API
+app.use("/api/articles", articleRoutes);
 
-// GESTION DES ERREURS
+// GESTIONS DES ERREURS
 // Routes 404
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({
     message: "Route non trouvée",
   });
 });
 
-// Démarrage serveur
+// DÉMARRAGE DU SERVEUR
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || "localhost";
 
