@@ -1,0 +1,18 @@
+# Dependencies
+node_modules
+
+# Environment variables
+.env
+
+# Editor
+.idea
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Fichiers inutiles
+nul
+*.zip
+*.rar
