@@ -15,8 +15,7 @@
     "dotenv": "17.2.3",
     "express": "^5.2.1",
     "nodemon": "^3.1.11",
-    "prettier": "3.8.1",
-    "react-helmet-async": "^2.0.5"
+    "prettier": "3.8.1"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -24,7 +23,7 @@
     "cors": "^2.8.6",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
-    "mysql2": "^3.16.2",
-    "react-helmet-async": "^2.0.5"
+    "mysql2": "^3.16.2"
+   
   }
 }
