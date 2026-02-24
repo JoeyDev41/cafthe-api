@@ -6,14 +6,19 @@
 
 const express = require("express");
 const router = express.Router();
-const {register, login, getMe, logout, deleteAccount} = require("../controllers/ClientControllers");
-
 const {
+  register,
+  login,
+  getMe,
+  logout,
+  deleteAccount,
   getProfile,
   updateProfile,
   changePassword,
   getAll,
   getClientById,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/ClientControllers");
 const { verifyToken, verifyEmployeToken } = require("../../middleware/authMiddleware");
 const { requireVendeur } = require("../../middleware/roleMiddleware");
@@ -31,6 +36,12 @@ router.post("/register", register);
 
 // Connexion client
 router.post("/login", login);
+
+// Demande de réinitialisation du mot de passe (envoie le lien)
+router.post("/forgot-password", forgotPassword);
+
+// Réinitialisation du mot de passe avec le token reçu
+router.post("/reset-password", resetPassword);
 
 // Suppression de compte (anonymisation RGPD)
 router.delete("/account", verifyToken, deleteAccount);

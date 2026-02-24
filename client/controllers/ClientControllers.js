@@ -13,8 +13,12 @@ const {
   hashPassword,
   comparePassword,
   anonymizeClient,
+  saveResetToken,
+  findClientByResetToken,
+  clearResetToken,
 } = require("../models/ClientModel");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 // Inscription d'un nouveau client
 const register = async (req, res) => {
@@ -248,6 +252,78 @@ const getClientById = async (req, res) => {
   }
 };
 
+// Demande de réinitialisation du mot de passe
+// Génère un token sécurisé stocké en BDD et (en prod) envoie un email
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email requis" });
+    }
+
+    const clients = await findClientByEmail(email);
+
+    // On renvoie toujours le même message pour ne pas révéler si l'email existe (sécurité)
+    if (clients.length === 0) {
+      return res.json({ message: "Si cet email est associé à un compte, vous recevrez un lien de réinitialisation." });
+    }
+
+    const client = clients[0];
+
+    // Génération d'un token aléatoire sécurisé (64 caractères hex)
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 3600 * 1000); // Expire dans 1h
+
+    await saveResetToken(client.ID_Client, token, expires);
+
+    const frontUrl = process.env.FRONT_URL || "http://localhost:5173";
+    const resetLink = `${frontUrl}/reinitialisation-mdp?token=${token}`;
+
+    // En développement : le lien s'affiche dans la console
+    // TODO: En production, remplacer par un envoi d'email via nodemailer
+    console.log(`[DEV] Lien de réinitialisation pour ${email} :\n${resetLink}`);
+
+    res.json({ message: "Si cet email est associé à un compte, vous recevrez un lien de réinitialisation." });
+  } catch (error) {
+    console.error("Erreur mot de passe oublié:", error.message);
+    res.status(500).json({ message: "Erreur lors de l'envoi du lien" });
+  }
+};
+
+// Réinitialisation du mot de passe avec le token reçu par email
+const resetPassword = async (req, res) => {
+  try {
+    const { token, nouveau_mdp } = req.body;
+
+    if (!token || !nouveau_mdp) {
+      return res.status(400).json({ message: "Token et nouveau mot de passe requis" });
+    }
+
+    if (nouveau_mdp.length < 8) {
+      return res.status(400).json({ message: "Le mot de passe doit contenir au moins 8 caractères" });
+    }
+
+    // Recherche du client avec ce token (vérifie aussi que le token n'a pas expiré)
+    const clients = await findClientByResetToken(token);
+
+    if (clients.length === 0) {
+      return res.status(400).json({ message: "Lien invalide ou expiré" });
+    }
+
+    const client = clients[0];
+    const hash = await hashPassword(nouveau_mdp);
+
+    await updateClientPassword(client.ID_Client, hash);
+    await clearResetToken(client.ID_Client);
+
+    res.json({ message: "Mot de passe réinitialisé avec succès" });
+  } catch (error) {
+    console.error("Erreur réinitialisation mdp:", error.message);
+    res.status(500).json({ message: "Erreur lors de la réinitialisation du mot de passe" });
+  }
+};
+
 // Déconnexion : on supprime le cookie qui contient le token
 const logout = (req, res) => {
     res.clearCookie("token", {
@@ -304,4 +380,4 @@ const getMe = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getProfile, updateProfile, changePassword, getAll, getClientById, logout, getMe, deleteAccount };
+module.exports = { register, login, getProfile, updateProfile, changePassword, getAll, getClientById, logout, getMe, deleteAccount, forgotPassword, resetPassword };

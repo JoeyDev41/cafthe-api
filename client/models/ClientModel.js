@@ -123,6 +123,33 @@ const searchClients = async (search) => {
   return rows;
 };
 
+// Sauvegarder un token de réinitialisation de mot de passe
+const saveResetToken = async (clientId, token, expires) => {
+  const [result] = await db.query(
+    "UPDATE clients SET reset_token = ?, reset_token_expires = ? WHERE ID_Client = ?",
+    [token, expires, clientId]
+  );
+  return result;
+};
+
+// Trouver un client par son token de réinitialisation (seulement si non expiré)
+const findClientByResetToken = async (token) => {
+  const [rows] = await db.query(
+    "SELECT * FROM clients WHERE reset_token = ? AND reset_token_expires > NOW()",
+    [token]
+  );
+  return rows;
+};
+
+// Effacer le token de réinitialisation après utilisation
+const clearResetToken = async (id) => {
+  const [result] = await db.query(
+    "UPDATE clients SET reset_token = NULL, reset_token_expires = NULL WHERE ID_Client = ?",
+    [id]
+  );
+  return result;
+};
+
 // Anonymiser un client (droit à l'oubli RGPD)
 // On remplace toutes les données personnelles par des valeurs anonymes
 // mais on garde la ligne en BDD pour que les commandes restent cohérentes
@@ -157,4 +184,7 @@ module.exports = {
   hashPassword,
   comparePassword,
   anonymizeClient,
+  saveResetToken,
+  findClientByResetToken,
+  clearResetToken,
 };
