@@ -39,13 +39,9 @@ app.use(express.static("public"));
 // Obligatoire sinon le navigateur bloque les requêtes du front (port 5173)
 // vers l'API (port 3000) car ce n'est pas la même origine
 // credentials: true permet d'envoyer les cookies (pour le JWT HttpOnly)
-app.options('*', cors()); // ✅ répond aux preflight OPTIONS (Plesk/Nginx)
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://cafthefront.jferreira.dev-campus.fr" 
-    ],
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }),
